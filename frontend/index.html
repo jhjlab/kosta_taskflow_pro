@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- FOUC 방지: 렌더 전 다크 클래스 적용 -->
+  <script>
+    (function () {
+      var saved = localStorage.getItem('theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if ((saved ?? (prefersDark ? 'dark' : 'light')) === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskflowPro</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+</head>
+
+<body class="bg-zinc-100 dark:bg-zinc-900 font-sans min-h-screen transition-colors duration-200">
+
+  <!-- ── 인증 화면 ────────────────────────────────────── -->
+  <div id="auth-screen" class="hidden min-h-screen flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-sm">
+
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">TaskflowPro</h1>
+        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">팀 업무 시각화</p>
+      </div>
+
+      <!-- 탭 -->
+      <div class="flex bg-zinc-200 dark:bg-zinc-800 rounded-xl p-1 mb-4">
+        <button id="tab-login"
+          onclick="switchTab('login')"
+          class="flex-1 py-2 rounded-lg text-sm font-medium transition-colors bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm min-h-[44px]">
+          로그인
+        </button>
+        <button id="tab-register"
+          onclick="switchTab('register')"
+          class="flex-1 py-2 rounded-lg text-sm font-medium transition-colors text-zinc-500 dark:text-zinc-400 min-h-[44px]">
+          회원가입
+        </button>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <div id="login-form"
+        class="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-zinc-200/50 dark:border-zinc-700/50 p-6">
+        <div class="flex flex-col gap-4">
+          <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">이메일</label>
+            <input id="login-email" type="email" autocomplete="email" placeholder="you@example.com"
+              onkeydown="if(event.key==='Enter')handleLogin()"
+              class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">비밀번호</label>
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••"
+              onkeydown="if(event.key==='Enter')handleLogin()"
+              class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]" />
+          </div>
+          <p id="login-error" class="hidden text-sm text-red-500 -mt-1"></p>
+          <button onclick="handleLogin()"
+            class="w-full py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl text-sm font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors min-h-[44px]">
+            로그인
+          </button>
+        </div>
+      </div>
+
+      <!-- 회원가입 폼 -->
+      <div id="register-form"
+        class="hidden bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-zinc-200/50 dark:border-zinc-700/50 p-6">
+        <div class="flex flex-col gap-4">
+          <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">이름 <span class="text-zinc-400 font-normal">(선택)</span></label>
+            <input id="reg-name" type="text" autocomplete="name" placeholder="홍길동"
+              class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">이메일</label>
+            <input id="reg-email" type="email" autocomplete="email" placeholder="you@example.com"
+              class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">비밀번호 <span class="text-zinc-400 font-normal">(8자 이상)</span></label>
+            <input id="reg-password" type="password" autocomplete="new-password" placeholder="••••••••"
+              onkeydown="if(event.key==='Enter')handleRegister()"
+              class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]" />
+          </div>
+          <p id="reg-error" class="hidden text-sm text-red-500 -mt-1"></p>
+          <button onclick="handleRegister()"
+            class="w-full py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl text-sm font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors min-h-[44px]">
+            회원가입
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 앱 화면 ────────────────────────────────────────── -->
+  <div id="app-screen" class="hidden min-h-screen flex flex-col">
+
+    <!-- 헤더 -->
+    <header class="sticky top-0 z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border-b border-zinc-200/60 dark:border-zinc-700/60">
+      <div class="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+        <h1 class="text-lg font-bold text-zinc-900 dark:text-white">TaskflowPro</h1>
+        <div class="flex items-center gap-1">
+          <button onclick="toggleTheme()"
+            title="테마 전환"
+            class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-lg min-h-[44px]">
+            <span id="theme-icon">🌙</span>
+          </button>
+          <button onclick="handleLogout()"
+            class="px-3 h-10 flex items-center rounded-xl text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors min-h-[44px]">
+            로그아웃
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="flex-1 max-w-2xl mx-auto w-full px-4 py-6 flex flex-col gap-4">
+
+      <!-- 태스크 추가 패널 -->
+      <div class="bg-white/80 dark:bg-zinc-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-zinc-200/50 dark:border-zinc-700/50 overflow-hidden">
+        <button onclick="toggleAddForm()"
+          class="w-full px-4 py-3 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-700/40 transition-colors min-h-[44px]">
+          <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">+ 새 태스크 추가</span>
+          <span id="add-chevron" class="text-zinc-400 text-xs">▼</span>
+        </button>
+        <div id="add-form-body" class="hidden border-t border-zinc-100 dark:border-zinc-700 px-4 pt-3 pb-4">
+          <div class="flex flex-col gap-3">
+            <input id="add-title" type="text" placeholder="태스크 제목 *" maxlength="200"
+              onkeydown="if(event.key==='Enter')handleAddTask()"
+              class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]" />
+            <div class="flex gap-2 flex-wrap">
+              <input id="add-due" type="datetime-local"
+                class="flex-1 min-w-[160px] px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]" />
+              <select id="add-status"
+                class="flex-1 min-w-[120px] px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+                <option value="todo">할 일</option>
+                <option value="in_progress">진행 중</option>
+                <option value="done">완료</option>
+              </select>
+            </div>
+            <p id="add-error" class="hidden text-sm text-red-500"></p>
+            <button onclick="handleAddTask()"
+              class="w-full py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl text-sm font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors min-h-[44px]">
+              추가
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 태스크 목록 -->
+      <div id="task-list" class="flex flex-col gap-3"></div>
+
+      <!-- 빈 상태 -->
+      <div id="empty-state" class="hidden flex flex-col items-center justify-center py-20 text-center">
+        <p class="text-4xl mb-3">📋</p>
+        <p class="text-sm text-zinc-400 dark:text-zinc-600">태스크가 없습니다. 첫 태스크를 추가해보세요!</p>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ── 수정 모달 ──────────────────────────────────────── -->
+  <div id="modal-overlay"
+    onclick="closeModal()"
+    class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-20 flex items-center justify-center px-4">
+    <div onclick="event.stopPropagation()"
+      class="w-full max-w-md bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl border border-zinc-200/50 dark:border-zinc-700/50 p-6 flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-semibold text-zinc-900 dark:text-white">태스크 수정</h2>
+        <button onclick="closeModal()"
+          class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-500 transition-colors min-h-[44px]">
+          ✕
+        </button>
+      </div>
+      <input type="hidden" id="edit-id" />
+      <div class="flex flex-col gap-3">
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">제목 *</label>
+          <input id="edit-title" type="text" maxlength="200"
+            class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">설명</label>
+          <textarea id="edit-desc" rows="3"
+            class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <div class="flex-1 min-w-[120px]">
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">상태</label>
+            <select id="edit-status"
+              class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]">
+              <option value="todo">할 일</option>
+              <option value="in_progress">진행 중</option>
+              <option value="done">완료</option>
+            </select>
+          </div>
+          <div class="flex-1 min-w-[160px]">
+            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">마감 일시</label>
+            <input id="edit-due" type="datetime-local"
+              class="w-full px-3 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]" />
+          </div>
+        </div>
+        <p id="edit-error" class="hidden text-sm text-red-500"></p>
+        <div class="flex gap-2 justify-end pt-1">
+          <button onclick="closeModal()"
+            class="px-5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-600 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors min-h-[44px]">
+            취소
+          </button>
+          <button onclick="handleUpdateTask()"
+            class="px-5 py-2.5 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-semibold hover:bg-zinc-700 dark:hover:bg-zinc-100 transition-colors min-h-[44px]">
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
